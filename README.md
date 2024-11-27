@@ -12,12 +12,18 @@ by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI P
 
 1. แบบที่สะดวกที่สุดคือกดสร้าง Github Codespace จากปุ่มด้านล่าง และข้ามไปยังส่วน exercise ได้เลย
 
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/teerasej/promptflow?quickstart=1)
+[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/teerasej/promptflow-workshop-national-coding-day-2024)
 
 > Github codespace เป็นบริการที่ Github ให้บริการให้เราสามารถสร้าง environment สำหรับการพัฒนาโปรเจคได้ทันที โดยไม่ต้องติดตั้งอะไรเลย และสามารถเข้าใช้งานผ่านเว็บเบราว์เซอร์ได้ทันที [ดูรายละเอียดปริมาณการใช้งานได้จากที่นี่](https://github.blog/changelog/2022-11-09-codespaces-for-free-and-pro-accounts/?utm_source=chatgpt.com)
 
 
 2. แบบที่ 2 คือ การเตรียมเครื่องเอง โดย[ติดตั้งโปรแกรมตามขั้นตอนต่อไปนี้](/docs/setup-local.md)
+
+## Exercise
+
+1. Simple flow
+
+
 
 ## Reference
 
