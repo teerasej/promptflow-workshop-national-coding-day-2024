@@ -1,0 +1,87 @@
+name: Publish Promptflow Doc
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - preview/docs
+    paths:
+      - 'README.md'
+      - 'docs/**'
+      - 'examples/**.ipynb'
+      - 'scripts/docs/**'
+      - '.github/workflows/publish_doc.yml'
+      - 'src/promptflow-tracing/promptflow/**'
+      - 'src/promptflow-core/promptflow/**'
+      - 'src/promptflow-devkit/promptflow/**'
+      - 'src/promptflow-azure/promptflow/**'
+      - 'src/promptflow-rag/promptflow/**'
+      - 'src/promptflow-evals/promptflow/**'
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+env:
+  packageSetupType: promptflow_with_extra
+  testWorkingDirectory: ${{ github.workspace }}/src/promptflow
+
+jobs:
+  build:
+    runs-on: windows-latest
+    name: Build
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Python Setup
+        uses: "./.github/actions/step_create_python_environment"
+
+      - name: Install packages
+        shell: pwsh
+        # Note: Use -e to avoid duplicate object warning when build apidoc.
+        run: |
+          pip uninstall -y promptflow-tracing promptflow-core promptflow-devkit promptflow-azure promptflow-rag promptflow-evals
+          pip install -e ${{ github.workspace }}/src/promptflow-tracing
+          pip install -e ${{ github.workspace }}/src/promptflow-core
+          pip install -e ${{ github.workspace }}/src/promptflow-devkit
+          pip install -e ${{ github.workspace }}/src/promptflow-azure
+          pip install -e ${{ github.workspace }}/src/promptflow-rag
+          pip install -e ${{ github.workspace }}/src/promptflow-evals
+          pip freeze
+
+      - name: Build Doc
+        shell: powershell
+        working-directory: scripts/docs/
+        run: |-
+          pip install langchain
+          ./doc_generation.ps1 -WithReferenceDoc:$true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          # Upload entire repository
+          path: scripts/docs/_build
+      
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy
+    needs: build
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1

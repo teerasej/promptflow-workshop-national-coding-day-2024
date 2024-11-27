@@ -1,0 +1,18 @@
+{
+    "incident_id_extractor.completed": 3,
+    "job_info_extractor.completed": 1,
+    "job_info_extractor.bypassed": 2,
+    "incident_info_extractor.completed": 2,
+    "incident_info_extractor.bypassed": 1,
+    "icm_retriever.completed": 1,
+    "icm_retriever.bypassed": 2,
+    "tsg_retriever.completed": 1,
+    "tsg_retriever.bypassed": 2,
+    "kql_tsg_retriever.completed": 1,
+    "kql_tsg_retriever.bypassed": 2,
+    "investigation_steps.completed": 2,
+    "investigation_steps.bypassed": 1,
+    "retriever_summary.completed": 2,
+    "retriever_summary.bypassed": 1,
+    "investigation_method.completed": 3
+}

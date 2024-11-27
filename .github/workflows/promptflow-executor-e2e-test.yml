@@ -1,0 +1,196 @@
+name: promptflow-executor-e2e-test
+on:
+  schedule:
+    - cron: "40 20 * * *" # Every day starting at 4:40 BJT
+  pull_request_target:
+    paths:
+      - src/promptflow-core/*
+      - src/promptflow/*
+      - src/promptflow/promptflow/*
+      - src/promptflow/promptflow/_core/**
+      - src/promptflow/promptflow/_internal/**
+      - src/promptflow/promptflow/_utils/**
+      - src/promptflow/promptflow/batch/**
+      - src/promptflow/promptflow/contracts/**
+      - src/promptflow/promptflow/entities/**
+      - src/promptflow/promptflow/executor/**
+      - src/promptflow/promptflow/integrations/**
+      - src/promptflow/promptflow/storage/**
+      - src/promptflow/tests/*
+      - src/promptflow/tests/executor/**
+      - src/promptflow-tracing/promptflow/**
+      - src/promptflow-core/promptflow/**
+      - src/promptflow-devkit/promptflow/**
+      - src/promptflow-parallel/promptflow/**
+      - scripts/building/**
+      - src/promptflow-recording/recordings/local/executor_node_cache.*
+      - .github/workflows/promptflow-executor-e2e-test.yml
+  workflow_dispatch:
+env:
+  packageSetupType: promptflow_with_extra
+  testWorkingDirectory: ${{ github.workspace }}/src/promptflow
+  PYTHONPATH: ${{ github.workspace }}/src/promptflow
+  IS_IN_CI_PIPELINE: "true"
+  RECORD_DIRECTORY: ${{ github.workspace }}/src/promptflow-recording
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  authorize:
+    environment:
+      # forked prs from pull_request_target will be run in external environment, domain prs will be run in internal environment
+      ${{ github.event_name == 'pull_request_target' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      'external' || 'internal' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
+  build:
+    needs: authorize
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
+    - name: merge main to current branch
+      uses: "./.github/actions/step_merge_main"
+    - name: Display and Set Environment Variables
+      run: |
+        env | sort >> $GITHUB_OUTPUT
+      id: display_env
+      shell: bash -el {0}
+    - name: Python Setup - ubuntu-latest - Python Version 3.9
+      uses: "./.github/actions/step_create_python_environment"
+      with:
+        pythonVersion: 3.9
+    - name: Build wheel
+      uses: "./.github/actions/step_sdk_setup"
+      with:
+        setupType: promptflow_with_extra
+        scriptPath: ${{ env.testWorkingDirectory }}
+    - name: Upload Wheel
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: wheel
+        path: |
+          ${{ github.workspace }}/src/promptflow/dist/*.whl
+          ${{ github.workspace }}/src/promptflow-tools/dist/*.whl
+
+  executor_e2e_tests:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    environment:
+      internal
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Set test mode
+      run: echo "PROMPT_FLOW_TEST_MODE=$(if [[ "${{ github.event_name }}" == "pull_request_target" ]]; then echo replay; else echo live; fi)" >> $GITHUB_ENV
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
+    - name: merge main to current branch
+      uses: "./.github/actions/step_merge_main"
+    - name: Python Setup - ${{ matrix.os }} - Python Version 3.9
+      uses: "./.github/actions/step_create_python_environment"
+      with:
+        pythonVersion: 3.9
+    - name: Download Artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: wheel
+        path: artifacts
+    - name: Install wheel
+      shell: pwsh
+      working-directory: artifacts
+      run: |
+        Set-PSDebug -Trace 1
+        pip install -r ${{ github.workspace }}/src/promptflow/dev_requirements.txt
+        pip install ${{ github.workspace }}/src/promptflow-tracing
+        pip install ${{ github.workspace }}/src/promptflow-core[executor-service]
+        pip install ${{ github.workspace }}/src/promptflow-devkit
+        pip install ${{ github.workspace }}/src/promptflow-azure
+        gci ./promptflow -Recurse | % {if ($_.Name.Contains('.whl')) {python -m pip install "$($_.FullName)"}}
+        gci ./promptflow-tools -Recurse | % {if ($_.Name.Contains('.whl')) {python -m pip install $_.FullName}}
+        pip freeze
+    - name: install recording
+      run: |
+        pip install vcrpy
+        pip install .
+      working-directory: ${{ env.RECORD_DIRECTORY }}
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+        tenant-id: ${{secrets.AZURE_TENANT_ID}}
+        client-id: ${{secrets.AZURE_CLIENT_ID}}
+    - name: Generate Configs
+      uses: "./.github/actions/step_generate_configs"
+      with:
+        targetFolder: ${{ env.testWorkingDirectory }}
+    - name: Get number of CPU cores
+      uses: SimenB/github-actions-cpu-cores@v1
+      id: cpu-cores
+    - name: Run Coverage Test
+      shell: pwsh
+      working-directory: ${{ github.workspace }}
+      run: |
+        gci env:* | sort-object name
+        az account show
+        pip install langchain-community tenacity<8.4.0
+        # numexpr is required by langchain in e2e tests.
+        pip install numexpr
+        python scripts/building/run_coverage_tests.py `
+          -p ${{ env.testWorkingDirectory }}/promptflow `
+          -t ${{ env.testWorkingDirectory }}/tests/executor/e2etests `
+          -l eastus `
+          -m "all" `
+          -n ${{ steps.cpu-cores.outputs.count }}`
+          --coverage-config ${{ env.testWorkingDirectory }}/tests/executor/.coveragerc `
+          --disable-cov-branch
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test Results (Python 3.9) (OS ${{ matrix.os }})
+        path: |
+          ${{ github.workspace }}/*.xml
+          ${{ github.workspace }}/htmlcov/
+  publish-test-results:
+    name: "Publish Tests Results"
+    needs: executor_e2e_tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+      issues: read
+    if: always()
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
+    - name: merge main to current branch
+      uses: "./.github/actions/step_merge_main"
+    - name: Publish Test Results
+      uses: "./.github/actions/step_publish_test_results"
+      with:
+        testActionFileName: promptflow-executor-e2e-test.yml
+        testResultTitle: Executor E2E Test Result
+        osVersion: ubuntu-latest
+        pythonVersion: 3.9
+        coverageThreshold: 70
+        context: test/executor_e2e

@@ -1,0 +1,5 @@
+entry: simple_callable_class:MyFlow
+sample:
+  inputs: ${file:./inputs.json}
+environment:
+  image: promptflow.azurecr.io/promptflow-runtime:bu-20240403-1452

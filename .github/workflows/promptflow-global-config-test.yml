@@ -1,0 +1,135 @@
+name: promptflow-global-config-test
+on:
+  schedule:
+    - cron: "40 18 * * *" # Every day starting at 2:40 BJT
+  pull_request_target:
+    paths:
+      - src/promptflow-core/**
+      - src/promptflow-devkit/**
+      - src/promptflow-tracing/**
+      - src/promptflow-azure/**
+      - src/promptflow/**
+      - scripts/building/**
+      - .github/workflows/promptflow-global-config-test.yml
+  workflow_dispatch:
+permissions:
+  id-token: write
+  contents: read
+env:
+  IS_IN_CI_PIPELINE: "true"
+  RECORD_DIRECTORY: ${{ github.workspace }}/src/promptflow-recording
+  TRACING_DIRECTORY: ${{ github.workspace }}/src/promptflow-tracing
+  CORE_DIRECTORY: ${{ github.workspace }}/src/promptflow-core
+  WORKING_DIRECTORY: ${{ github.workspace }}/src/promptflow-devkit
+  PROMPTFLOW_DIRECTORY: ${{ github.workspace }}/src/promptflow
+  TOOL_DIRECTORY: ${{ github.workspace }}/src/promptflow-tools
+  AZURE_DIRECTORY: ${{ github.workspace }}/src/promptflow-azure
+jobs:
+  authorize:
+    environment:
+      # forked prs from pull_request_target will be run in external environment, domain prs will be run in internal environment
+      ${{ github.event_name == 'pull_request_target' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      'external' || 'internal' }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
+  sdk_cli_global_config_tests:
+    needs: authorize
+    environment:
+      internal
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+        fetch-depth: 0
+    - name: merge main to current branch
+      uses: "./.github/actions/step_merge_main"
+    - name: Display and Set Environment Variables
+      run: |
+        export pyVersion="3.9"
+        env | sort >> $GITHUB_OUTPUT
+      id: display_env
+      shell: bash -el {0}
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ steps.display_env.outputs.pyVersion }}
+    - uses: snok/install-poetry@v1
+    - name: install test dependency group
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        set -xe
+        poetry install --only test
+        poetry run pip install ${{ env.TRACING_DIRECTORY }}
+        poetry run pip install ${{ env.CORE_DIRECTORY }}[azureml-serving]
+        poetry run pip install -e ${{ env.WORKING_DIRECTORY }}[pyarrow]
+        poetry run pip install -e ${{ env.AZURE_DIRECTORY }}
+
+        echo "Need to install promptflow to avoid tool dependency issue"
+        poetry run pip install ${{ env.PROMPTFLOW_DIRECTORY }}
+        poetry run pip install ${{ env.TOOL_DIRECTORY }}
+        poetry run pip install -e ${{ env.RECORD_DIRECTORY }}
+
+        poetry run pip show promptflow-tracing
+        poetry run pip show promptflow-core
+        poetry run pip show promptflow-devkit
+        poetry run pip show promptflow-azure
+        poetry run pip show promptflow-tools
+    - name: Azure Login
+      uses: azure/login@v1
+      with:
+        subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+        tenant-id: ${{secrets.AZURE_TENANT_ID}}
+        client-id: ${{secrets.AZURE_CLIENT_ID}}
+    - name: Install Azure Login items
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+      run: |
+        pip install azure-identity
+        pip install azure-keyvault
+    - name: Generate Configs
+      uses: "./.github/actions/step_generate_configs"
+      with:
+        targetFolder: ${{ env.PROMPTFLOW_DIRECTORY }}
+    - name: run devkit tests
+      run: |
+        poetry run pytest ./tests/sdk_cli_global_config_test --cov=promptflow --cov-config=pyproject.toml \
+        --cov-report=term --cov-report=html --cov-report=xml -n auto -m "unittest or e2etest" --tb=short
+      working-directory: ${{ env.WORKING_DIRECTORY }}
+    - name: Upload Test Results
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: Test Results (Python ${{ steps.display_env.outputs.pyVersion }}) (OS ${{ matrix.os }})
+        path: |
+          ${{ env.WORKING_DIRECTORY }}/*.xml
+          ${{ env.WORKING_DIRECTORY }}/htmlcov/
+  publish-test-results-global-config-test:
+    needs: sdk_cli_global_config_tests
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+      issues: read
+    if: always()
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ github.event.pull_request.head.sha || github.ref }}
+    - name: Publish Test Results
+      uses: "./.github/actions/step_publish_test_results"
+      with:
+        testActionFileName: promptflow-global-config-test.yml
+        testResultTitle: SDK CLI Global Config Test Result
+        osVersion: ubuntu-latest
+        pythonVersion: 3.9
+        coverageThreshold: 0
+        context: test/sdk_cli

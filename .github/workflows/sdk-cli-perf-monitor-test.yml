@@ -1,0 +1,109 @@
+# execute tests in src/promptflow/tests/sdk_cli_azure_test, src/promptflow/tests/sdk_cli_test with mark perf_monitor_test
+
+name: sdk-cli-perf-monitor-test
+
+
+on:
+  pull_request:
+    paths:
+      - src/promptflow/**
+      - src/promptflow-core/**
+      - src/promptflow-devkit/**
+      - src/promptflow-azure/**
+      - scripts/building/**
+      - .github/workflows/sdk-cli-perf-monitor-test.yml
+
+  schedule:
+    - cron: "0 */6 * * *"  # Run every 6 hours
+
+  workflow_dispatch:
+
+
+env:
+  IS_IN_CI_PIPELINE: "true"
+  PROMPT_FLOW_TEST_MODE: "replay"
+  TRACING_DIRECTORY: ${{ github.workspace }}/src/promptflow-tracing
+  WORKING_DIRECTORY: ${{ github.workspace }}/src/promptflow-azure
+  CORE_DIRECTORY: ${{ github.workspace }}/src/promptflow-core
+  DEVKIT_DIRECTORY: ${{ github.workspace }}/src/promptflow-devkit
+  PROMPTFLOW_DIRECTORY: ${{ github.workspace }}/src/promptflow
+  TOOL_DIRECTORY: ${{ github.workspace }}/src/promptflow-tools
+  RECORD_DIRECTORY: ${{ github.workspace }}/src/promptflow-recording
+
+jobs:
+  sdk_cli_perf_monitor_test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-13, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Set Github Run Id to an Environment Variable
+        run: echo "GITHUB_RUN_ID=${{ github.run_id }}" >> $GITHUB_ENV
+
+      - name: Print Github Run Id
+        run: echo "Github Run Id is GITHUB_RUN_ID"
+
+      - name: Display and Set Environment Variables
+        run: |
+          export pyVersion="3.9";
+          env | sort >> $GITHUB_OUTPUT
+        id: display_env
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.display_env.outputs.pyVersion }}
+      - uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+      - name: install test dependency group
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          poetry install --with test
+      - run: |
+          source .venv/scripts/activate
+          pytest --version
+        if: runner.os == 'Windows'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+      - run: |
+          source .venv/bin/activate
+          pytest --version
+        if: runner.os != 'Windows'
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+      - run: |
+          set -xe
+          poetry run pip install ../promptflow-tracing
+          poetry run pip install ../promptflow-core[azureml-serving]
+          poetry run pip install ../promptflow-devkit[pyarrow]
+          poetry run pip install ../promptflow-azure
+
+          echo "Need to install promptflow to avoid tool dependency issue"
+          poetry run pip install ../promptflow
+          poetry run pip install ../promptflow-tools
+          poetry run pip install ../promptflow-recording
+
+          poetry run pip show promptflow-tracing
+          poetry run pip show promptflow-core
+          poetry run pip show promptflow-devkit
+          poetry run pip show promptflow-azure
+          poetry run pip show promptflow-tools
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+
+      - name: Generate (mock) connections.json
+        shell: pwsh
+        working-directory: ${{ env.PROMPTFLOW_DIRECTORY }}
+        run: cp ${{ github.workspace }}/src/promptflow/dev-connections.json.example ${{ github.workspace }}/src/promptflow/connections.json
+
+      - name: Run Test
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          poetry run pytest ./tests/sdk_cli_azure_test ../promptflow-azure/tests/sdk_cli_azure_test -m "perf_monitor_test"
+

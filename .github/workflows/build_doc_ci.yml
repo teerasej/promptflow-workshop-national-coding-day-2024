@@ -1,0 +1,89 @@
+name: Build Doc CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'README.md'
+      - 'docs/**'
+      - 'examples/**.ipynb'
+      - 'scripts/docs/**'
+      - '.github/workflows/build_doc_ci.yml'
+      - 'src/promptflow-tracing/promptflow/**'
+      - 'src/promptflow-core/promptflow/**'
+      - 'src/promptflow-devkit/promptflow/**'
+      - 'src/promptflow-azure/promptflow/**'
+      - 'src/promptflow-rag/promptflow/**'
+      - 'src/promptflow-evals/promptflow/**'
+
+env:
+  packageSetupType: promptflow_with_extra
+  testWorkingDirectory: ${{ github.workspace }}/src/promptflow
+
+jobs:
+  build_doc_job:
+    runs-on: windows-latest
+    name: Build Doc
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Python Setup
+        uses: "./.github/actions/step_create_python_environment"
+
+      - name: Install packages
+        shell: pwsh
+        # Note: Use -e to avoid duplicate object warning when build apidoc.
+        run: |
+          pip uninstall -y promptflow-tracing promptflow-core promptflow-devkit promptflow-azure promptflow-rag promptflow-evals
+          pip install -e ${{ github.workspace }}/src/promptflow-tracing
+          pip install -e ${{ github.workspace }}/src/promptflow-core
+          pip install -e ${{ github.workspace }}/src/promptflow-devkit
+          pip install -e ${{ github.workspace }}/src/promptflow-azure
+          pip install -e ${{ github.workspace }}/src/promptflow-rag
+          pip install -e ${{ github.workspace }}/src/promptflow-evals
+          pip freeze
+
+      - name: Build doc with reference doc
+        shell: powershell
+        working-directory: scripts/docs/
+        run: |-
+          pip install langchain tenacity<8.4.0
+          ./doc_generation.ps1 -WithReferenceDoc:$true -WarningAsError:$true 
+
+  # Note: We have this job separately because some error may missing when build link check exists.
+  link_check_job:
+    runs-on: windows-latest
+    name: Build Link Check
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Python Setup
+        uses: "./.github/actions/step_create_python_environment"
+
+      - name: Install packages
+        shell: pwsh
+        # Note: Use -e to avoid duplicate object warning when build apidoc.
+        run: |
+          pip uninstall -y promptflow-tracing promptflow-core promptflow-devkit promptflow-azure promptflow-rag promptflow-evals
+          pip install -e ${{ github.workspace }}/src/promptflow-tracing
+          pip install -e ${{ github.workspace }}/src/promptflow-core
+          pip install -e ${{ github.workspace }}/src/promptflow-devkit
+          pip install -e ${{ github.workspace }}/src/promptflow-azure
+          pip install -e ${{ github.workspace }}/src/promptflow-rag
+          pip install -e ${{ github.workspace }}/src/promptflow-evals
+          pip freeze
+
+      - name: Build LinkCheck
+        shell: powershell
+        working-directory: scripts/docs/
+        run: |-
+          pip install langchain tenacity<8.4.0
+          ./doc_generation.ps1 -WithReferenceDoc:$true -WarningAsError:$true -BuildLinkCheck

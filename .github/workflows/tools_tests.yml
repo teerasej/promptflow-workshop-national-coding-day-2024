@@ -1,0 +1,80 @@
+name: tools_tests
+permissions:
+  # This is required for requesting the JWT
+  id-token: write
+  # This is required for actions/checkout
+  contents: read
+on:
+  workflow_dispatch:
+  pull_request_target:
+    paths:
+      - src/promptflow-tools/**
+      - scripts/tool/**
+      - .github/workflows/tools_tests.yml
+jobs:
+  authorize:
+    environment:
+      # forked prs from pull_request_target will be run in external environment, domain prs will be run in internal environment
+      ${{ github.event_name == 'pull_request_target' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      'external' || 'internal' }}
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    steps:
+      - run: true
+  build:
+    needs: authorize
+    strategy:
+      fail-fast: false
+    runs-on: ubuntu-latest
+    environment: Testing
+    timeout-minutes: 30
+    env:
+      DEPENDENCY_SOURCE_MODE: ${{ secrets.DEPENDENCY_SOURCE_MODE }}
+    steps:
+      - name: Check for dockerenv file
+        run: (ls /.dockerenv && echo Found dockerenv) || (echo No dockerenv)
+        # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.ref }}
+      - name: Setup
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest_mock
+          pip install azure-identity azure-keyvault-secrets
+          # "DEPENDENCY_SOURCE_MODE" is "main" or "package", means the dependency source of code
+          if [ "$DEPENDENCY_SOURCE_MODE" = "main" ]; then
+            pip install ${{ github.workspace }}/src/promptflow-tracing
+            pip install ${{ github.workspace }}/src/promptflow-core
+            pip install ${{ github.workspace }}/src/promptflow-devkit
+            pip install ${{ github.workspace }}/src/promptflow-azure
+            pip install ${{ github.workspace }}/src/promptflow
+            pip install google-search-results==2.4.1
+            pip install openai>=1.0.0
+            pip install azure-mgmt-cognitiveservices==13.5.0
+          else
+            pip install -r ./src/promptflow-tools/requirements.txt
+            pip install azure-ai-ml>=1.11.0,<2.0.0
+            pip install azure-mgmt-cognitiveservices==13.5.0
+          fi
+          pip list
+
+      - name: Azure login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.CLIENT_ID }}
+          tenant-id: ${{ secrets.TENANT_ID }}
+          subscription-id: ${{ secrets.TEST_WORKSPACE_SUB_ID }}
+
+      - name: Generate configs
+        run: |
+          python ./scripts/tool/generate_connection_config.py
+
+      - name: Run tests
+        run: |
+          if [ "$DEPENDENCY_SOURCE_MODE" = "main" ]; then
+            export PYTHONPATH=./src/promptflow
+          fi
+          pytest ./src/promptflow-tools/tests

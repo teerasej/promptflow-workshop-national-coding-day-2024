@@ -1,0 +1,7 @@
+- name: {{ step_name }}
+  working-directory: examples
+  run: |
+    if [[ -e requirements.txt ]]; then
+      python -m pip install --upgrade pip
+      pip install -r requirements.txt
+    fi

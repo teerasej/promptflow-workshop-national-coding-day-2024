@@ -1,0 +1,42 @@
+name: Update CI runtime
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  update_runtime:
+    runs-on: ubuntu-latest
+    environment:
+      internal
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.9 environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+          tenant-id: ${{secrets.AZURE_TENANT_ID}}
+          client-id: ${{secrets.AZURE_CLIENT_ID}}
+
+      - name: Generate config.json for canary & production regions
+        run: |
+          echo '${{ secrets.TEST_WORKSPACE_CONFIG_JSON_CANARY }}' > ${{ github.workspace }}/scripts/runtime_mgmt/canary.json
+          echo '${{ secrets.EXAMPLE_WORKSPACE_CONFIG_JSON_PROD }}' > ${{ github.workspace }}/scripts/runtime_mgmt/production.json
+
+      - name: Update runtime
+        shell: pwsh
+        working-directory: ${{ github.workspace }}/scripts/runtime_mgmt
+        run: |
+          pip install promptflow[azure]
+          python update-runtime.py --path canary.json
+          python update-runtime.py --path production.json

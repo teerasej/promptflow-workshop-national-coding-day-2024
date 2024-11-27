@@ -1,0 +1,40 @@
+name: tools_continuous_delivery
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/promptflow-tools/**'
+      - '!README.*'
+      - '!src/promptflow-tools/tests/**'
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Release branch name'
+        required: true
+        default: 'main'
+        type: string
+
+jobs:
+  main_branch_release:
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/wheel_distributing.yml
+    name: Private PyPI main branch release
+    with:
+      ReleaseType: "Release"
+      UploadAsLatest: "True"
+      SourceFolderName: "promptflow-tools"
+      ConfigsFolderPath: "scripts/distributing/configs"
+    secrets: inherit
+  
+  non_main_branch_release:
+    if: github.event_name == 'workflow_dispatch'
+    uses: ./.github/workflows/wheel_distributing.yml
+    name: Private PyPI non-main branch release
+    with:
+      ReleaseType: "Test"
+      UploadAsLatest: "False"
+      SourceFolderName: "promptflow-tools"
+      ConfigsFolderPath: "scripts/distributing/configs"
+    secrets: inherit

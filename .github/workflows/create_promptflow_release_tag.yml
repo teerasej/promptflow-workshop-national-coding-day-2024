@@ -1,0 +1,87 @@
+name: Create promptflow release tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_version:
+        description: "Release version"
+        required: true
+        type: string
+
+jobs:
+  create_release_tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+
+      - name: create branch
+        run: |
+          set -x -e
+
+          branch_name="${{ github.ref_name }}"
+          echo "branch name: $branch_name"
+
+          if [[ $branch_name != release/promptflow/* ]]; then
+            echo "not a release branch for promptflow, exiting..."
+            exit 1
+          fi
+
+          release_version=${branch_name#release/promptflow/}
+          echo "release version: $release_version"
+
+          echo "replacing version in src/promptflow/promptflow/_version.py..."
+          sed -i "s/0.0.1/$release_version/g" src/promptflow/promptflow/_version.py
+          echo "replaced src/promptflow/promptflow/_version.py:"
+          cat src/promptflow/promptflow/_version.py
+
+          if [[ $(git diff --name-only) == *"src/promptflow/promptflow/_version.py"* ]]; then
+            git add src/promptflow/promptflow/_version.py
+            git config --global user.name 'promptflow release'
+            git config --global user.email 'aml-pt-eng@microsoft.com'
+            git commit -m "update version in _version.py for promptflow"
+            git push --set-upstream origin $branch_name
+          fi
+
+          git tag promptflow_$release_version
+          git push origin --tags
+
+          # write environment variable to `GITHUB_ENV` to pass values between steps
+          # https://docs.github.com/en/github-ae@latest/actions/learn-github-actions/variables#passing-values-between-steps-and-jobs-in-a-workflow
+          echo "release_version=$release_version" >> "$GITHUB_ENV"
+          echo "release_tag=$release_tag" >> "$GITHUB_ENV"
+
+      - name: create asset
+        run: |
+          cd src
+          tar -czvf promptflow-$release_version.tar.gz promptflow
+
+      - name: create release note
+        run: |
+          cp ./scripts/release/promptflow-release-note.md ./src/promptflow/release_note.md
+          sed -i "s/{{VERSION}}/$release_version/g" ./src/promptflow/release_note.md
+          cat ./src/promptflow/release_note.md
+
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: promptflow_${{ inputs.release_version }}
+          release_name: promptflow ${{ inputs.release_version }}
+          body_path: ./src/promptflow/release_note.md
+          draft: false
+          prerelease: false
+
+      - name: upload asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./src/promptflow-${{ inputs.release_version }}.tar.gz
+          asset_name: promptflow-${{ inputs.release_version }}.tar.gz
+          asset_content_type: application/gzip

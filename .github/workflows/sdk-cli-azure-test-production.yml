@@ -1,0 +1,100 @@
+# execute tests in src/promptflow/tests/sdk_cli_azure_test with live mode
+
+name: sdk-cli-azure-test-production
+
+on:
+  schedule:
+    - cron: "30 20 * * *"  # 4:30 Beijing Time (GMT+8)
+
+  workflow_dispatch:
+    inputs:
+      filepath:
+        description: file or path you want to trigger a test
+        required: true
+        default: "./tests/sdk_cli_azure_test"
+        type: string
+      promptflow_ws_name:
+        description: test workspace
+        required: true
+        default: "promptflow-eastus"
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  IS_IN_CI_PIPELINE: "true"
+  PROMPT_FLOW_TEST_MODE: "live"
+  PROMPT_FLOW_WORKSPACE_NAME: "promptflow-eastus"
+  TRACING_DIRECTORY: ${{ github.workspace }}/src/promptflow-tracing
+  CORE_DIRECTORY: ${{ github.workspace }}/src/promptflow-core
+  DEVKIT_DIRECTORY: ${{ github.workspace }}/src/promptflow-devkit
+  WORKING_DIRECTORY: ${{ github.workspace }}/src/promptflow-azure
+  PROMPTFLOW_DIRECTORY: ${{ github.workspace }}/src/promptflow
+  TOOL_DIRECTORY: ${{ github.workspace }}/src/promptflow-tools
+  RECORD_DIRECTORY: ${{ github.workspace }}/src/promptflow-recording
+
+
+jobs:
+  sdk_cli_azure_test_live:
+    strategy:
+      fail-fast: false
+      matrix:
+        # replay tests can cover more combinations
+        os: [ubuntu-latest]
+        pythonVersion: ['3.8', '3.9', '3.10', '3.11']
+    environment:
+      internal
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: set variables
+        run: |
+          echo "PROMPT_FLOW_WORKSPACE_NAME=$(if [[ "${{ inputs.promptflow_ws_name }}" == "" ]]; then echo "promptflow-eastus"; else echo ${{ inputs.promptflow_ws_name }}; fi)" >> $GITHUB_ENV
+          echo "FILE_PATHS=$(if [[ "${{ inputs.filepath }}" == "" ]]; then echo "./tests/sdk_cli_test ./tests/sdk_pfs_test"; else echo ${{ inputs.filepath }}; fi)" >> $GITHUB_ENV
+
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Display and Set Environment Variables
+        run: env | sort >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pythonVersion }}
+      - uses: snok/install-poetry@v1
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          subscription-id: ${{secrets.AZURE_SUBSCRIPTION_ID}}
+          tenant-id: ${{secrets.AZURE_TENANT_ID}}
+          client-id: ${{secrets.AZURE_CLIENT_ID}}
+      - name: Generate Configs
+        uses: "./.github/actions/step_generate_configs"
+        with:
+          targetFolder: ${{ env.PROMPTFLOW_DIRECTORY }}
+      - name: install test dependency group
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          set -xe
+          poetry install --with ci,test
+
+          poetry run pip show promptflow-tracing
+          poetry run pip show promptflow-core
+          poetry run pip show promptflow-devkit
+          poetry run pip show promptflow-azure
+          poetry run pip show promptflow-tools
+
+      - name: Run SDK CLI Azure Test
+        shell: pwsh
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          poetry run pytest ${{ inputs.filepath }} -n auto -m "unittest or e2etest" --tb=short
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results (Python ${{ matrix.pythonVersion }}) (OS ${{ matrix.os }})
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/tests/sdk_cli_azure_test/count.json

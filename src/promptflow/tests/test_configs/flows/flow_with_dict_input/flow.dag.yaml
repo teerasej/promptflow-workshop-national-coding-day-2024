@@ -1,0 +1,23 @@
+inputs:
+  key:
+    type: object
+outputs:
+  output:
+    type: string
+    reference: ${get_dict_val.output.value}
+nodes:
+- name: get_dict_val
+  type: python
+  source:
+    type: code
+    path: get_dict_val.py
+  inputs:
+    key: ${inputs.key}
+- name: print_val
+  type: python
+  source:
+    type: code
+    path: print_val.py
+  inputs:
+    val: ${get_dict_val.output.value}
+    origin_val: ${get_dict_val.output.origin_value}

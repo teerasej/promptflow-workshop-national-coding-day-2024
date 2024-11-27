@@ -1,0 +1,108 @@
+# this is an exclusive workflow for pull request
+# it executes tests in src/promptflow/tests/sdk_cli_azure_test with replay mode
+
+name: sdk-cli-azure-test-pull-request
+
+on:
+  pull_request:
+    paths:
+      - src/promptflow/**
+      - scripts/building/**
+      - .github/workflows/sdk-cli-azure-test-pull-request.yml
+      - src/promptflow-tracing/**
+      - src/promptflow-core/**
+      - src/promptflow-devkit/**
+      - src/promptflow-azure/**
+      - src/promptflow-recording/**
+
+
+env:
+  IS_IN_CI_PIPELINE: "true"
+  PROMPT_FLOW_TEST_MODE: "replay"
+  PROMPT_FLOW_TEST_PACKAGE: "promptflow-azure"
+  TRACING_DIRECTORY: ${{ github.workspace }}/src/promptflow-tracing
+  WORKING_DIRECTORY: ${{ github.workspace }}/src/promptflow-azure
+  CORE_DIRECTORY: ${{ github.workspace }}/src/promptflow-core
+  DEVKIT_DIRECTORY: ${{ github.workspace }}/src/promptflow-devkit
+  PROMPTFLOW_DIRECTORY: ${{ github.workspace }}/src/promptflow
+  TOOL_DIRECTORY: ${{ github.workspace }}/src/promptflow-tools
+  RECORD_DIRECTORY: ${{ github.workspace }}/src/promptflow-recording
+
+
+jobs:
+  sdk_cli_azure_test_replay:
+    strategy:
+      fail-fast: false
+      matrix:
+        # replay tests can cover more combinations
+        os: [ubuntu-latest]
+        pythonVersion: ['3.8', '3.9', '3.10', '3.11']
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: Display and Set Environment Variables
+        run: env | sort >> $GITHUB_OUTPUT
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.pythonVersion }}
+      - uses: snok/install-poetry@v1
+      - name: install test dependency group
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          set -xe
+          poetry install --with ci,test
+
+          poetry run pip show promptflow-tracing
+          poetry run pip show promptflow-core
+          poetry run pip show promptflow-devkit
+          poetry run pip show promptflow-azure
+          poetry run pip show promptflow-tools
+
+      - name: generate live test resources
+        working-directory: ${{ env.PROMPTFLOW_DIRECTORY }}
+        run: |
+          cp ${{ github.workspace }}/src/promptflow/dev-connections.json.example ${{ github.workspace }}/src/promptflow/connections.json
+
+      - name: Run SDK CLI Azure Test (replay mode)
+        shell: pwsh
+        working-directory: ${{ env.WORKING_DIRECTORY }}
+        run: |
+          poetry run pytest ./tests/sdk_cli_azure_test --cov=promptflow --cov-config=pyproject.toml `
+          --cov-report=term --cov-report=html --cov-report=xml -n auto -m "(unittest or e2etest) and not csharp" --tb=short
+
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Test Results (Python ${{ matrix.pythonVersion }}) (OS ${{ matrix.os }})
+          path: |
+            ${{ env.WORKING_DIRECTORY }}/*.xml
+            ${{ env.WORKING_DIRECTORY }}/htmlcov/
+
+  publish-test-results-sdk-cli-azure-test:
+    needs: sdk_cli_azure_test_replay
+    if: always()
+
+    runs-on: ubuntu-latest
+    permissions:
+      checks: write
+      pull-requests: write
+      contents: read
+      issues: read
+
+    steps:
+    - name: checkout
+      uses: actions/checkout@v4
+    - name: Publish Test Results
+      uses: "./.github/actions/step_publish_test_results"
+      with:
+        testActionFileName: promptflow-sdk-cli-azure-e2e-test.yml
+        testResultTitle: promptflow SDK CLI Azure E2E Test Result
+        osVersion: ubuntu-latest
+        pythonVersion: 3.9
+        coverageThreshold: 40
+        context: test/sdk_cli

@@ -1,0 +1,215 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - promptflow-sdk/0.0.1 azure-ai-ml/1.12.1 azsdk-python-mgmt-machinelearningservices/0.1.0
+        Python/3.10.13 (Windows-10-10.0.22631-SP0)
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/00000/providers/Microsoft.MachineLearningServices/workspaces/00000
+  response:
+    body:
+      string: '{"id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/00000/providers/Microsoft.MachineLearningServices/workspaces/00000",
+        "name": "00000", "type": "Microsoft.MachineLearningServices/workspaces", "location":
+        "eastus", "tags": {}, "etag": null, "kind": "Default", "sku": {"name": "Basic",
+        "tier": "Basic"}, "properties": {"discoveryUrl": "https://eastus.api.azureml.ms/discovery"}}'
+    headers:
+      cache-control:
+      - no-cache
+      content-length:
+      - '3630'
+      content-type:
+      - application/json; charset=utf-8
+      expires:
+      - '-1'
+      pragma:
+      - no-cache
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding,Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-request-time:
+      - '0.032'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - application/json
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - promptflow-sdk/0.0.1 azure-ai-ml/1.12.1 azsdk-python-mgmt-machinelearningservices/0.1.0
+        Python/3.10.13 (Windows-10-10.0.22631-SP0)
+    method: GET
+    uri: https://management.azure.com/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/00000/providers/Microsoft.MachineLearningServices/workspaces/00000/datastores?count=30&isDefault=true&orderByAsc=false
+  response:
+    body:
+      string: '{"value": [{"id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/00000/providers/Microsoft.MachineLearningServices/workspaces/00000/datastores/workspaceblobstore",
+        "name": "workspaceblobstore", "type": "Microsoft.MachineLearningServices/workspaces/datastores",
+        "properties": {"description": null, "tags": null, "properties": null, "isDefault":
+        true, "credentials": {"credentialsType": "AccountKey"}, "intellectualProperty":
+        null, "subscriptionId": "00000000-0000-0000-0000-000000000000", "resourceGroup":
+        "00000", "datastoreType": "AzureBlob", "accountName": "fake_account_name",
+        "containerName": "fake-container-name", "endpoint": "core.windows.net", "protocol":
+        "https", "serviceDataAccessAuthIdentity": "WorkspaceSystemAssignedIdentity"},
+        "systemData": {"createdAt": "2023-04-08T02:53:06.5886442+00:00", "createdBy":
+        "779301c0-18b2-4cdc-801b-a0a3368fee0a", "createdByType": "Application", "lastModifiedAt":
+        "2023-04-08T02:53:07.521127+00:00", "lastModifiedBy": "779301c0-18b2-4cdc-801b-a0a3368fee0a",
+        "lastModifiedByType": "Application"}}]}'
+    headers:
+      cache-control:
+      - no-cache
+      content-length:
+      - '1372'
+      content-type:
+      - application/json; charset=utf-8
+      expires:
+      - '-1'
+      pragma:
+      - no-cache
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding,Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-request-time:
+      - '0.073'
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"filters": [{"field": "type", "operator": "eq", "values": ["flows"]},
+      {"field": "annotations/isArchived", "operator": "eq", "values": ["false"]},
+      {"field": "properties/creationContext/createdBy/userTenantId", "operator": "eq",
+      "values": ["00000000-0000-0000-0000-000000000000"]}, {"field": "properties/creationContext/createdBy/userObjectId",
+      "operator": "eq", "values": ["00000000-0000-0000-0000-000000000000"]}], "freeTextSearch":
+      "", "order": [{"direction": "Desc", "field": "properties/creationContext/createdTime"}],
+      "pageSize": 3, "skip": 0, "includeTotalResultCount": true, "searchBuilder":
+      "AppendPrefix"}'
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '614'
+      Content-Type:
+      - application/json
+      User-Agent:
+      - python-requests/2.31.0
+    method: POST
+    uri: https://eastus.api.azureml.ms/index/v1.0/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/00000/providers/Microsoft.MachineLearningServices/workspaces/00000/entities
+  response:
+    body:
+      string: '{"totalCount": 23, "value": [{"relevancyScore": 1.0, "entityResourceName":
+        "promptflow-eastus", "highlights": {}, "usage": {"totalCount": 0}, "schemaId":
+        "b5db529c-c91d-5e96-8288-f175dd87470d", "entityId": "azureml://location/eastus/workspaceId/3e123da1-f9a5-4c91-9234-8d9ffbb39ff5/type/flows/objectId/3e123da1-f9a5-4c91-9234-8d9ffbb39ff5:2e039c90-c69a-4c52-9754-d3a93c6eaa7e",
+        "kind": "Unversioned", "annotations": {"archived": false, "tags": {"owner":
+        "sdk-test"}, "flowName": "7c7f43f9-9b23-424f-b93e-1852d5e3dc9e", "createdDate":
+        "2024-01-17T07:08:35.8574809Z", "lastModifiedDate": "2024-01-17T07:08:35.8574809Z",
+        "owner": {"userObjectId": "00000000-0000-0000-0000-000000000000", "userTenantId":
+        "00000000-0000-0000-0000-000000000000", "userName": "Zhengfei Wang", "userPrincipalName":
+        null}, "isArchived": false, "vmSize": null, "maxIdleTimeSeconds": null, "name":
+        null, "description": "test flow description"}, "properties": {"updatedTime":
+        "0001-01-01T00:00:00+00:00", "creationContext": {"createdTime": "2024-01-17T07:08:35.8574809+00:00",
+        "createdBy": {"userObjectId": "00000000-0000-0000-0000-000000000000", "userTenantId":
+        "00000000-0000-0000-0000-000000000000", "userName": "Zhengfei Wang", "userPrincipalName":
+        null}, "creationSource": null}, "flowId": "2e039c90-c69a-4c52-9754-d3a93c6eaa7e",
+        "experimentId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "flowType": "Default",
+        "flowDefinitionFilePath": "Users/unknown_user/promptflow/simple_hello_world-01-17-2024-15-08-13/flow.dag.yaml"},
+        "internal": {}, "updateSequence": 638410721158574809, "type": "flows", "version":
+        null, "entityContainerId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "entityObjectId":
+        "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5:2e039c90-c69a-4c52-9754-d3a93c6eaa7e",
+        "resourceType": "Workspace", "relationships": []}, {"relevancyScore": 1.0,
+        "entityResourceName": "promptflow-eastus", "highlights": {}, "usage": {"totalCount":
+        0}, "schemaId": "b5db529c-c91d-5e96-8288-f175dd87470d", "entityId": "azureml://location/eastus/workspaceId/3e123da1-f9a5-4c91-9234-8d9ffbb39ff5/type/flows/objectId/3e123da1-f9a5-4c91-9234-8d9ffbb39ff5:7b4314f4-2f4f-43bf-af55-e64d9e7d5361",
+        "kind": "Unversioned", "annotations": {"archived": false, "tags": {"owner":
+        "sdk-test"}, "flowName": "1d41d299-f9e5-4405-8bac-569f3ea1141b", "createdDate":
+        "2024-01-17T07:07:45.269399Z", "lastModifiedDate": "2024-01-17T07:07:45.2693991Z",
+        "owner": {"userObjectId": "00000000-0000-0000-0000-000000000000", "userTenantId":
+        "00000000-0000-0000-0000-000000000000", "userName": "Zhengfei Wang", "userPrincipalName":
+        null}, "isArchived": false, "vmSize": null, "maxIdleTimeSeconds": null, "name":
+        null, "description": "test flow description"}, "properties": {"updatedTime":
+        "0001-01-01T00:00:00+00:00", "creationContext": {"createdTime": "2024-01-17T07:07:45.269399+00:00",
+        "createdBy": {"userObjectId": "00000000-0000-0000-0000-000000000000", "userTenantId":
+        "00000000-0000-0000-0000-000000000000", "userName": "Zhengfei Wang", "userPrincipalName":
+        null}, "creationSource": null}, "flowId": "7b4314f4-2f4f-43bf-af55-e64d9e7d5361",
+        "experimentId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "flowType": "Default",
+        "flowDefinitionFilePath": "Users/unknown_user/promptflow/simple_hello_world-01-17-2024-15-07-23/flow.dag.yaml"},
+        "internal": {}, "updateSequence": 638410720652693991, "type": "flows", "version":
+        null, "entityContainerId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "entityObjectId":
+        "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5:7b4314f4-2f4f-43bf-af55-e64d9e7d5361",
+        "resourceType": "Workspace", "relationships": []}, {"relevancyScore": 1.0,
+        "entityResourceName": "promptflow-eastus", "highlights": {}, "usage": {"totalCount":
+        0}, "schemaId": "b5db529c-c91d-5e96-8288-f175dd87470d", "entityId": "azureml://location/eastus/workspaceId/3e123da1-f9a5-4c91-9234-8d9ffbb39ff5/type/flows/objectId/3e123da1-f9a5-4c91-9234-8d9ffbb39ff5:b28c9746-fac1-40ed-9d65-f93857d05655",
+        "kind": "Unversioned", "annotations": {"archived": false, "tags": {"owner":
+        "sdk-test"}, "flowName": "b9a89f25-0efa-40ad-86cd-15e16c739f42", "createdDate":
+        "2024-01-17T07:06:54.5784734Z", "lastModifiedDate": "2024-01-17T07:06:54.5784735Z",
+        "owner": {"userObjectId": "00000000-0000-0000-0000-000000000000", "userTenantId":
+        "00000000-0000-0000-0000-000000000000", "userName": "Zhengfei Wang", "userPrincipalName":
+        null}, "isArchived": false, "vmSize": null, "maxIdleTimeSeconds": null, "name":
+        null, "description": "test flow description"}, "properties": {"updatedTime":
+        "0001-01-01T00:00:00+00:00", "creationContext": {"createdTime": "2024-01-17T07:06:54.5784734+00:00",
+        "createdBy": {"userObjectId": "00000000-0000-0000-0000-000000000000", "userTenantId":
+        "00000000-0000-0000-0000-000000000000", "userName": "Zhengfei Wang", "userPrincipalName":
+        null}, "creationSource": null}, "flowId": "b28c9746-fac1-40ed-9d65-f93857d05655",
+        "experimentId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "flowType": "Default",
+        "flowDefinitionFilePath": "Users/unknown_user/promptflow/simple_hello_world-01-17-2024-15-06-31/flow.dag.yaml"},
+        "internal": {}, "updateSequence": 638410720145784735, "type": "flows", "version":
+        null, "entityContainerId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "entityObjectId":
+        "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5:b28c9746-fac1-40ed-9d65-f93857d05655",
+        "resourceType": "Workspace", "relationships": []}], "nextSkip": 3, "entityContainerIdsToEntityContainerMetadata":
+        {"3e123da1-f9a5-4c91-9234-8d9ffbb39ff5": {"resourceId": "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5",
+        "subscriptionId": "96aede12-2f73-41cb-b983-6d11a904839b", "resourceGroup":
+        "promptflow", "resourceName": "promptflow-eastus", "entityContainerType":
+        "Workspace", "regions": [{"regionName": "eastus", "isPrimaryRegion": true}],
+        "tenantId": "00000000-0000-0000-0000-000000000000", "immutableResourceId":
+        "3e123da1-f9a5-4c91-9234-8d9ffbb39ff5", "isPublicResource": false}}, "resourcesNotQueriedReasons":
+        {}, "numberOfEntityContainersNotQueried": 0, "fanoutData": {"Multitenant":
+        {"nextSkip": 3, "isShardDone": false, "didShardFail": false, "totalCount":
+        23, "resourceIdsOnShardThisPage": ["3e123da1-f9a5-4c91-9234-8d9ffbb39ff5"]}},
+        "regionalFanoutState": {"shardFanoutStates": [{"shardId": "Multitenant", "nextSkip":
+        3, "isPlanExecutionDone": false, "didPlanExecutionFail": false, "totalCount":
+        23, "resourceIdsOnShardThisPage": ["3e123da1-f9a5-4c91-9234-8d9ffbb39ff5"]}],
+        "firstPageStartTime": null}, "shardErrors": {}, "canSupportSkip": true}'
+    headers:
+      connection:
+      - keep-alive
+      content-length:
+      - '6309'
+      content-type:
+      - application/json; charset=utf-8
+      strict-transport-security:
+      - max-age=15724800; includeSubDomains; preload
+      transfer-encoding:
+      - chunked
+      vary:
+      - Accept-Encoding
+      x-content-type-options:
+      - nosniff
+      x-request-time:
+      - '0.114'
+    status:
+      code: 200
+      message: OK
+version: 1
