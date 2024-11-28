@@ -2,6 +2,12 @@
 
 by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI Platform](https://mvp.microsoft.com/en-US/MVP/profile/1b57773c-a042-e711-8112-3863bb2ed1f8)
 
+
+## Part 0: Survey!
+
+https://app.sli.do/event/39g7dBLfG9ov3Dsz6Xmg4v
+
+
 ## Part 1: ⚠️💰 Cost Alert! 
 
 ในการทำ workshop นี้ ทางผู้เข้าร่วม workshop จะมีการใช้บัญชี Microsoft Azure Account หรือ OpenAI Developer Account อย่างใดอย่างหนึ่งในการทำ workshop ซึ่งจะมีค่าใช้จ่ายจากการใช้บริการดังกล่าวของตนเองนะครับ 
