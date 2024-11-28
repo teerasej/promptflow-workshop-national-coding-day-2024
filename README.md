@@ -37,7 +37,7 @@ by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI P
 > Github codespace เป็นบริการที่ Github ให้บริการให้เราสามารถสร้าง environment สำหรับการพัฒนาโปรเจคได้ทันที โดยไม่ต้องติดตั้งอะไรเลย และสามารถเข้าใช้งานผ่านเว็บเบราว์เซอร์ได้ทันที [ดูรายละเอียดปริมาณการใช้งานได้จากที่นี่](https://github.blog/changelog/2022-11-09-codespaces-for-free-and-pro-accounts/?utm_source=chatgpt.com)
 
 
-2. แบบที่ 2 คือ การเตรียมเครื่องเอง โดย[ติดตั้งโปรแกรมตามขั้นตอนต่อไปนี้](/docs/setup-local.md)
+1. แบบที่ 2 คือ การเตรียมเครื่องเอง โดย[ติดตั้งโปรแกรมตามขั้นตอนต่อไปนี้](/instructions/setup-local.md) และข้ามไปยังส่วน exercise ได้เลย
 
 ## Exercise
 
