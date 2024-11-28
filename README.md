@@ -41,7 +41,7 @@ by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI P
 
 ## Exercise
 
-1. Simple flow
+1. Checking Environment
 
 
 
