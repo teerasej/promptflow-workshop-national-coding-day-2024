@@ -2,7 +2,7 @@
 
 by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI Platform](https://mvp.microsoft.com/en-US/MVP/profile/1b57773c-a042-e711-8112-3863bb2ed1f8)
 
-## ⚠️💰 Cost Alert! 
+## Part 1: ⚠️💰 Cost Alert! 
 
 ในการทำ workshop นี้ ทางผู้เข้าร่วม workshop จะมีการใช้บัญชี Microsoft Azure Account หรือ OpenAI Developer Account อย่างใดอย่างหนึ่งในการทำ workshop ซึ่งจะมีค่าใช้จ่ายจากการใช้บริการดังกล่าวของตนเองนะครับ 
 
@@ -26,11 +26,11 @@ by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI P
    <img width="843" alt="2024-11-28_18-12-25" src="https://github.com/user-attachments/assets/50f6d6d8-c386-4b9f-b671-3155a9711163">
 
 
-## การเตรียมเครื่องสำหรับ Workshop 
+## Part 2: การเตรียมระบบสำหรับใช้ใน Workshop 
 
-ทำได้ 2 แบบ 
+เลือกได้แบบใดแบบหนึ่ง 
 
-1. แบบที่สะดวกที่สุดคือกดสร้าง Github Codespace จากปุ่มด้านล่าง และข้ามไปยังส่วน exercise ได้เลย
+1. แบบที่สะดวกที่สุดคือ กดสร้าง Github Codespace จากปุ่มด้านล่าง และข้ามไปยังส่วน exercise ได้เลย
 
 [![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/teerasej/promptflow-workshop-national-coding-day-2024)
 
@@ -41,9 +41,13 @@ by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI P
 
 ## Exercise
 
-1. Checking Environment
+1. [Checking Environment](/instructions/checking-env.md)
+2. [First Flow](/instructions/first-flow.md) 
 
 
+## Next Chapter 
+
+- Microsoft Prompt Flow [Document](https://microsoft.github.io/promptflow/index.html)
 
 ## Reference
 
