@@ -1,0 +1,16 @@
+inputs:
+  message:
+    type: string
+    default: nextflow
+outputs:
+  result:
+    type: string
+    reference: ${complete_message.output}
+nodes:
+- name: complete_message
+  type: python
+  source:
+    type: code
+    path: complete_message.py
+  inputs:
+    message: ${inputs.message}

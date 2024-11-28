@@ -1,0 +1,28 @@
+inputs:
+  message:
+    type: string
+    default: nextflow
+outputs:
+  result:
+    type: string
+    reference: ${ai_model.output}
+nodes:
+- name: complete_message
+  type: python
+  source:
+    type: code
+    path: complete_message.py
+  inputs:
+    message: ${inputs.message}
+- name: ai_model
+  type: llm
+  source:
+    type: code
+    path: ai_model.jinja2
+  inputs:
+    model: gpt-3.5-turbo
+    temperature: 0.7
+    max_tokens: 300
+    question: ${complete_message.output}
+  connection: openai_connection_009
+  api: chat

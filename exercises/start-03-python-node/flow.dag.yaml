@@ -1,0 +1,9 @@
+inputs:
+  message:
+    type: string
+    default: สวัสดี
+outputs:
+  result:
+    type: string
+    reference: ${inputs.message}
+nodes: []

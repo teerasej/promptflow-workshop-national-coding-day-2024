@@ -1,0 +1,41 @@
+inputs:
+  question:
+    type: string
+    default: Is it winter in Bangkok?
+outputs:
+  result:
+    type: string
+    reference: ${completer.output}
+nodes:
+- name: extract_city_name
+  type: llm
+  source:
+    type: code
+    path: extract_city_name.jinja2
+  inputs:
+    temperature: 0.7
+    max_tokens: 100
+    question: ${inputs.question}
+    model: gpt-3.5-turbo
+  connection: openai_connection_009
+  api: chat
+- name: query_temp
+  type: python
+  source:
+    type: code
+    path: query_temp.py
+  inputs:
+    city_name: ${extract_city_name.output}
+- name: completer
+  type: llm
+  source:
+    type: code
+    path: completer.jinja2
+  inputs:
+    model: gpt-3.5-turbo
+    temperature: 0.7
+    max_tokens: 300
+    temp_info: ${query_temp.output}
+    question: ${inputs.question}
+  connection: openai_connection_009
+  api: chat

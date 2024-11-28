@@ -1,0 +1,9 @@
+inputs:
+  question:
+    type: string
+    default: Is it winter in Bangkok?
+outputs:
+  result:
+    type: string
+    reference: ${completer.output}
+nodes: []

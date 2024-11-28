@@ -43,6 +43,9 @@ by [Teerasej Jiraphatchandej](https://linktr.ee/teerasej), [Microsoft MVP - AI P
 
 1. [Checking Environment](/instructions/checking-env.md)
 2. [First Flow](/instructions/first-flow.md) 
+3. [Adding Python Node](/instructions/python-node.md)
+4. [Adding LLM Node](/instructions/llm-node.md)
+5. [Weather bot](/instructions/rag.md)
 
 
 ## Next Chapter 
