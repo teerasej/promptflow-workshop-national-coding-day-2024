@@ -1,3 +1,0 @@
-entry: evc:evc_flow
-environment_variables:
-  TEST: ${not_exist.api_type}

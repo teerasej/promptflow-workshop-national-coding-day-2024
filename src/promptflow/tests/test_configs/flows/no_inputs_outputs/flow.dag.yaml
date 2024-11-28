@@ -1,9 +1,0 @@
-outputs:
-nodes:
-- name: say_hello
-  type: python
-  source:
-    type: code
-    path: say_hello.py
-
-

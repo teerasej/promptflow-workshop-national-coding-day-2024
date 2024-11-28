@@ -1,3 +1,0 @@
-Method,Name,Error,Occurrences
-POST,//score,"ConnectionResetError(104, 'Connection reset by peer')",2
-POST,//score,RemoteDisconnected('Remote end closed connection without response'),4

@@ -1,5 +1,0 @@
-{
-  "type": "azure_openai",
-  "azure_deployment": "gpt-35-turbo",
-  "connection": "azure_open_ai_connection"
-}
